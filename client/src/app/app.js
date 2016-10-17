@@ -1,7 +1,7 @@
-(function() {
+// (function () {
   'use strict';
 
-  angular.element(document).ready(function() {
+  angular.element(document).ready(function () {
     angular.bootstrap(document, ['app']);
   });
 
@@ -39,59 +39,80 @@
 
     $scope.value = 10
 
-    this.click = function(v)
-    {
+    this.click = function (v) {
       $log.debug(v);
     }
   }
 
   function GridCtrl($scope, $log) {
     $log.debug('GridCtrl loaded!');
+    this.func = function (value) {
+      this.val = value
+      value = value.toUpperCase();
+      return console.log(value);
+    }
+    this.print = function (value) {
+      return console.log(value);
+    }
   }
 
-  function ElementCtrl($scope, $log) {
-    $log.debug('ElementCtrl loaded!')
-  }
+  function BuscadorCtrlFactory(bindings) {
+    return function BuscadorCtrl() {
+      this.resultados = [];
+      this.bindings = bindings;
 
-  function grid() {
-    return {
-      restrict: 'E',
-      template: [
-        '<p>',
-        'Grid',
-        '</p>'
-      ].join('')
+      // Funciones
+      this.buscar = function (value) {
+        console.log(value.toUpperCase());
+      };
+
+      this.seleccionar = function (objeto) {
+        this.seleccionado = objeto;
+      };
+
+      /**
+       * Genera las cláusulas de búsqueda en base a los bindings definidos para
+       * el buscador.
+       */
+      this.generarClausulas = function () { }
     };
   }
 
-  function list() {
+  function buscador() {
+    var bindingsGenerales = {
+      'seleccionado': '='
+    };
+    // Definir los bindings correspondientes al buscador
+    var bindings = angular.extend(this.bindings || {}, bindingsGenerales);
+    // Definir el controlador
+    var controlador = BuscadorCtrlFactory(bindings); 
+    // Eliminar las entradas $ de los bindings
+    for (var key in bindings) {
+      if (bindings[key] == '$') delete bindings[key];
+    }
+
     return {
+      controller: controlador,
+      controllerAs: 'b',
+      bindToController: bindings,
       restrict: 'E',
-      controller: ['$scope', '$log', ElementCtrl],
-      controllerAs: 'element',
+      scope: {},
       template: [
-        '<ul>',
-        '<li ng-repeat="e in list">',
-        '{{ e }}',
-        '</li>',
-        '</ul>'
-      ].join('')
+        '<input ng-model="b.seleccionado">',
+        '<button ng-click="b.f(this)">Buscar</button>',
+        '<br>'
+      ].join(''),
     };
   }
 
-  function inputForm() {
-    return {
-      restrict: 'E',
-      controller: ['$scope', '$log', ElementCtrl],
-      controllerAs: 'element',
-      template: [
-        '<form>',
-        '<label for="field">Field</label>',
-        '<input id="field" ng-model="list[0]"></input>',
-        '</form>'
-      ].join('')
+  function buscadorArticulos() {
+    var configuracion = {
+      bindings: {
+        'valor': '='
+      }
     };
-  }  
+    return buscador.apply(configuracion);
+  }
 
   function run($log) {
     $log.debug('App is running!');
@@ -114,8 +135,6 @@
     .controller('MainCtrl', ['$scope', '$log', MainCtrl])
     .controller('MasterCtrl', ['$scope', '$log', MasterCtrl])
     .controller('GridCtrl', ['$scope', '$log', GridCtrl])
-    .directive('grid', grid)
-    .directive('list', list)
-    .directive('inputForm', inputForm)
+    .directive('buscador', buscadorArticulos)
     .value('version', '1.1.0');
-})();
+// })();
