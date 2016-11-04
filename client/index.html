@@ -22,7 +22,14 @@
       <option value=3>3</option>
     </select> <br>
     <buscador seleccionado="grid.val" valor="grid.selected"></buscador>
-    <!--<buscador buscar="hue" seleccionado="grid.val" valor="grid.selected"></buscador>-->
+    <buscador-configurable 
+      "req-show"="="
+      "req-hide"="!"
+      "req-ref"="grid.val"
+      "opt-show"="="
+      "opt-hide"="!"
+      "opt-ref"="grid.val"
+    />
   </div>
 
   <!-- build:js assets/js/vendor.js -->
