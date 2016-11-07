@@ -59,11 +59,11 @@ function GridCtrl($scope, $log) {
 function BuscadorCtrlFactory(bindings) {
   return function BuscadorCtrl() {
     this.resultados = [];
-    this.bindings = bindings;
+    this.bindings = angular.copy(bindings);
 
     // Funciones
-    this.buscar = function (value) {
-      console.log(value.toUpperCase());
+    this.buscar = function () {
+      console.log(this.bindings);
     };
 
     this.seleccionar = function (objeto) {
@@ -78,7 +78,7 @@ function BuscadorCtrlFactory(bindings) {
   };
 }
 
-function buscador() {
+function buscadorConfigurable() {
   // Definir los bindings correspondientes al buscador
   var bindingsGenerales = {
     'seleccionado': '='
@@ -88,70 +88,67 @@ function buscador() {
   // Definir el controlador
   var controlador = BuscadorCtrlFactory(bindings);
 
-  // Eliminar las entradas $ de los bindings
-  for (var key in bindings) {
-    if (bindings[key] == '$') delete bindings[key];
-  }
-
   return {
+    scope: bindings,    
     controller: controlador,
     controllerAs: 'b',
-    bindToController: bindings,
     restrict: 'E',
-    scope: {},
-    template: [
-      '<input ng-model="b.seleccionado">',
-      '<button ng-click="b.f(this)">Buscar</button>',
-      '<br>'
-    ].join(''),
-  };
+    template: function (element, attrs) {
+      var template = '';
+      for (var valor in bindings) {
+        // No mostrar el objeto seleccionado
+        if (valor === "seleccionado") continue;
+
+        var nombre = valor;
+
+        //  Definir la visibilidad del campo:
+        // * No se definió valor: mostrar (=) u ocultar (=?) el campo en base al tipo de binding
+        // * valor es true: siempre mostrar el campo
+        // * valor es false: nunca mostrar el campo
+        // * valor es una referencia: no mostrar el campo
+        valor = attrs[valor] !== undefined
+                ? attrs[valor]
+                : bindings[attrs.$normalize(valor)] === '=';
+        // Crear un input para el campo
+        if (valor === true || valor === "true") {
+          // Reemplazar el valor por el binding del controlador
+          // attrs.$set(nombre, nombre);
+          template += '<input name="' + nombre + '" ng-model="' + nombre + '"/>';
+          console.log(nombre);
+        }
+        else if (valor === false || valor === "false") {
+          // Eliminar el binding para el campo explícitamente oculto
+          delete(bindings[nombre]);
+          attrs.$set(nombre, null);
+        }
+      };
+      // Agregar el botón de búsqueda
+      template += '<button ng-click="buscar()">Buscar</button><br>';
+
+      return template;
+    },
+    link: function(scope, element, attrs) {
+      for (var nombre in bindings){
+        scope[nombre] = "";
+      }
+    },
+  }
 }
 
 function buscadorArticulos() {
   var configuracion = {
     bindings: {
-      'valor': '='
+      'reqDefault': '=',
+      'reqShow': '=',
+      'reqHide': '=',
+      'reqRef': '=',
+      'optDefault': '=?',
+      'optShow': '=?',
+      'optHide': '=?',
+      'optRef': '=?',
     }
   };
-  return buscador.apply(configuracion);
-}
-
-function objectsHaveSameKeys(...objects) {
-   const allKeys = objects.reduce((keys, object) => keys.concat(Object.keys(object)), []);
-   const union = new Set(allKeys);
-   return objects.every(object => union.size === Object.keys(object).length);
-}
-
-function buscadorConfigurable() {
-  var bindings = {
-    'req-default': '=',
-    'req-show': '=',
-    'req-hide': '=',
-    'req-ref': '=',
-    'opt-default': '=?',
-    'opt-show': '=?',
-    'opt-hide': '=?',
-    'opt-ref': '=?',
-  }
-  return {
-    controller: function () {},
-    controllerAs: 'c',
-    bindToController: bindings,
-    link: function (scope, element, attrs, ctrl) {
-      for (var attr in attrs.$attr) {
-        var nombre = attr;
-        attr = attrs[attr];
-        // Crear un input para el campo
-        if (attr === "=" || attr === undefined) {
-          element.append('<input name=' + nombre + '/>');
-        }
-        // No mostrar el campo en el buscador
-        else if (attr === "!") {
-          console.log('Not showing ' + nombre);
-        }
-      };
-    }
-  }
+  return buscadorConfigurable.apply(configuracion);
 }
 
 function run($log) {
@@ -176,6 +173,5 @@ angular.module('app', [
   .controller('MasterCtrl', ['$scope', '$log', MasterCtrl])
   .controller('GridCtrl', ['$scope', '$log', GridCtrl])
   .directive('buscador', buscadorArticulos)
-  .directive('buscadorConfigurable', buscadorConfigurable)
   .value('version', '1.1.0');
 // })();

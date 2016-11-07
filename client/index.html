@@ -21,15 +21,23 @@
       <option value=2>2</option>
       <option value=3>3</option>
     </select> <br>
-    <buscador seleccionado="grid.val" valor="grid.selected"></buscador>
-    <buscador-configurable 
-      "req-show"="="
-      "req-hide"="!"
-      "req-ref"="grid.val"
-      "opt-show"="="
-      "opt-hide"="!"
-      "opt-ref"="grid.val"
-    />
+    <input ng-model="grid.val"/><br><br>
+    <buscador
+      req-show="true"
+      req-hide="false"
+      req-ref="grid.val"
+      opt-show="true"
+      opt-hide="false"
+      opt-ref="grid.val"
+    ></buscador>
+    <buscador
+      req-show="true"
+      req-hide="true"
+      req-ref="true"
+      opt-show="true"
+      opt-hide="true"
+      opt-ref="true"
+    ></buscador>
   </div>
 
   <!-- build:js assets/js/vendor.js -->
