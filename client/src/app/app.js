@@ -59,11 +59,18 @@ function GridCtrl($scope, $log) {
 function BuscadorCtrlFactory(bindings) {
   return function BuscadorCtrl() {
     this.resultados = [];
-    this.bindings = angular.copy(bindings);
+    this.bindings = bindings;
 
     // Funciones
     this.buscar = function () {
-      console.log(this.bindings);
+      var datos = {}
+      for (var parametro in this.bindings) {
+        parametro = this.bindings[parametro];
+        var valor = this[parametro];
+        
+        if (valor !== undefined)
+          datos[parametro] = valor;
+      }
     };
 
     this.seleccionar = function (objeto) {
@@ -86,51 +93,38 @@ function buscadorConfigurable() {
   var bindings = angular.extend(this.bindings || {}, bindingsGenerales);
 
   // Definir el controlador
-  var controlador = BuscadorCtrlFactory(bindings);
+  var controlador = BuscadorCtrlFactory(Object.keys(bindings));
 
   return {
-    scope: bindings,    
+    scope: {},    
     controller: controlador,
     controllerAs: 'b',
     restrict: 'E',
     template: function (element, attrs) {
       var template = '';
-      for (var valor in bindings) {
+      for (var parametro in bindings) {
         // No mostrar el objeto seleccionado
-        if (valor === "seleccionado") continue;
-
-        var nombre = valor;
+        if (parametro === "seleccionado") continue;
 
         //  Definir la visibilidad del campo:
         // * No se definió valor: mostrar (=) u ocultar (=?) el campo en base al tipo de binding
         // * valor es true: siempre mostrar el campo
         // * valor es false: nunca mostrar el campo
         // * valor es una referencia: no mostrar el campo
-        valor = attrs[valor] !== undefined
-                ? attrs[valor]
-                : bindings[attrs.$normalize(valor)] === '=';
+        var valor = attrs[parametro] !== undefined
+                    ? attrs[parametro]
+                    : bindings[attrs.$normalize(parametro)] === '=';
         // Crear un input para el campo
         if (valor === true || valor === "true") {
           // Reemplazar el valor por el binding del controlador
-          // attrs.$set(nombre, nombre);
-          template += '<input name="' + nombre + '" ng-model="' + nombre + '"/>';
-          console.log(nombre);
-        }
-        else if (valor === false || valor === "false") {
-          // Eliminar el binding para el campo explícitamente oculto
-          delete(bindings[nombre]);
-          attrs.$set(nombre, null);
+          // attrs.$set(parametro, parametro);
+          template += '<input name="' + parametro + '" ng-model="b.' + parametro + '"/>';
         }
       };
       // Agregar el botón de búsqueda
-      template += '<button ng-click="buscar()">Buscar</button><br>';
+      template += '<button ng-click="b.buscar()">Buscar</button><br>';
 
       return template;
-    },
-    link: function(scope, element, attrs) {
-      for (var nombre in bindings){
-        scope[nombre] = "";
-      }
     },
   }
 }
