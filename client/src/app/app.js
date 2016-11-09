@@ -1,11 +1,20 @@
 // (function () {
 'use strict';
 
+var mccheterson;
+
 angular.element(document).ready(function () {
   angular.bootstrap(document, ['app']);
 });
 
-function config($stateProvider, $urlRouterProvider, $logProvider, $httpProvider) {
+var registroFormularioTipo = {
+    input: 'input',
+    fecha: 'fecha',
+    tags: 'tags',
+    dropdown: 'dropdown',
+}
+
+function config ($stateProvider, $urlRouterProvider, $logProvider, $httpProvider) {
   $urlRouterProvider.otherwise('/');
   $logProvider.debugEnabled(true);
   $httpProvider.interceptors.push('httpInterceptor');
@@ -24,11 +33,11 @@ function config($stateProvider, $urlRouterProvider, $logProvider, $httpProvider)
     });
 }
 
-function MainCtrl($scope, $log) {
+function MainCtrl ($scope, $log) {
   $log.debug('MainCtrl loaded!');
 }
 
-function MasterCtrl($scope, $log) {
+function MasterCtrl ($scope, $log) {
   $log.debug('MasterCtrl loaded!');
 
   $scope.list = [
@@ -44,7 +53,7 @@ function MasterCtrl($scope, $log) {
   }
 }
 
-function GridCtrl($scope, $log) {
+function GridCtrl ($scope, $log) {
   $log.debug('GridCtrl loaded!');
   this.func = function (value) {
     this.val = value
@@ -56,7 +65,7 @@ function GridCtrl($scope, $log) {
   }
 }
 
-function BuscadorCtrlFactory(datos) {
+function BuscadorCtrlFactory (datos) {
   return function BuscadorCtrl() {
     this.resultados = [];
     this.nombresDatos = Object.keys(datos);
@@ -82,108 +91,156 @@ function BuscadorCtrlFactory(datos) {
   };
 }
 
-function buscadorBase() {
-  // Definir los datos correspondientes al buscador
-  var datos = this || {};
-
-  // Definir el controlador
-  var controlador = BuscadorCtrlFactory(datos);
-
+function simple() {
+  var bindings = {a: '=?', b: '=?', c:'=?'};
+  var keys = Object.keys(bindings);
   return {
-    scope: {},
-    controller: controlador,
-    controllerAs: 'b',
-    restrict: 'E',
-    template: function (element, attrs) {
-      var template = '';
-      for (var parametro in datos) {
-        //  Definir la visibilidad del campo en base a su configuración `default`:
-        // * No se definió valor: mostrar (=) u ocultar (=?) el campo en base al tipo de binding
-        // * valor es true: siempre mostrar el campo
-        // * valor es false: nunca mostrar el campo
-        // * valor es una referencia: no mostrar el campo
-        var valor = attrs[parametro] !== undefined
-                    ? attrs[parametro]
-                    : datos[attrs.$normalize(parametro)].default === '=';
-        // Crear un input para el campo
-        if (valor === true || valor === "=") {
-          // Reemplazar el valor por el binding del controlador en base al tipo de dato
-          template += '<input name="' + parametro + '" ng-model="b.' + parametro + '"/>';
-        }
-      };
-      // Agregar el botón de búsqueda
-      template += '<button ng-click="b.buscar()">Buscar</button><br>';
-
+    scope: bindings,
+    controller: function(){},
+    template: function(element, attrs) {
+      var template = "";
+      for (var k in keys)
+      {
+        k = keys[k];
+        var v = attrs[k];
+        // if (v === undefined)
+        template += '<input ng-model="' + k + '"></input>';
+      }
       return template;
+    },
+    link: function(scope, element, attrs, ctrl) {
+      for (var k in keys) {
+        k = keys[k];
+        scope[k] = attrs[k];
+      }
     },
   }
 }
 
-function buscadorArticulos() {
-  var configuracion = {
-    'reqDefault': {
-      default: '=',
-      tipo: '',
-      label: 'Asociaciones',
-    },
-    'reqShow': {
-      default: '=',
-      tipo: '',
-      label: 'Asociaciones',
-    },
-    'reqHide': {
-      default: '=',
-      tipo: '',
-      label: 'Asociaciones',
-    },
-    'reqRef': {
-      default: '=',
-      tipo: '',
-      label: 'Asociaciones',
-    },
-    'optDefault': {
-      default: '=?',
-      tipo: '',
-      label: 'Asociaciones',
-    },
-    'optShow': {
-      default: '=?',
-      tipo: '',
-      label: 'Asociaciones',
-    },
-    'optHide': {
-      default: '=?',
-      tipo: '',
-      label: 'Asociaciones',
-    },
-    'optRef': {
-      default: '=?',
-      tipo: '',
-      label: 'Asociaciones',
-    },
-  };
-  return buscadorBase.apply(configuracion);
+function buscadorFactory (configuracion) {
+  var datos = configuracion || {};
+
+  // Definir el controlador
+  var controlador = BuscadorCtrlFactory(datos);
+
+  var buscador = function () {
+    var bindings = {};
+    for (var d in datos)
+    {
+      bindings[d] = '=?';
+    }
+    return {
+      scope: bindings,
+      controller: controlador,
+      restrict: 'E',
+      template: function (element, attrs) {
+        var template = '';
+        for (var parametro in datos) {
+          var dato = datos[parametro];
+          template += '<input ng-model="' + parametro + '"></input>';
+          template += '<label for="' + parametro + '">' + dato.label + '</label><br>'
+          // //  Definir la visibilidad del campo en base a su configuración `default`:
+          // // * No se definió valor: mostrar (=) u ocultar (=?) el campo en base al tipo de binding
+          // // * valor es true: siempre mostrar el campo
+          // // * valor es false: nunca mostrar el campo
+          // // * valor es una referencia: no mostrar el campo
+          // var dato = datos[parametro];
+          // var valor = attrs[parametro] !== undefined
+          //             ? attrs[parametro]
+          //             : datos[attrs.$normalize(parametro)].default === '=';
+          // // Crear un input para el campo
+          // if (valor === true || valor === "=") {
+          //   // Reemplazar el valor por el binding del controlador en base al tipo de dato
+          //   template += '<label for="' + parametro + '">' + dato.label + '</label>' +
+          //   '<input id="' + parametro + '" ng-model="' + parametro + '"/>';
+          // }
+          // // else if (valor !== "!")
+          // // {
+          // //   scope[parametro] = valor;
+          // // }
+        };
+        // Agregar el botón de búsqueda
+        template += '<button ng-click="b.buscar()">Buscar</button><br>';
+
+        return template;
+      },
+      link: function (scope, element, attrs, ctrl) {
+        for (var parametro in datos) {
+          var valor = attrs[parametro];
+          console.log(valor);
+          if (valor === "=")
+            scope[parametro] = "";
+          else if (valor === "!")
+            delete scope[parametro];
+        }
+      }
+    }
+  }
+  return buscador;
 }
+
+var configuracionArticulos = {
+  'reqDefault': {
+    default: '=',
+    tipo: registroFormularioTipo.input,
+    label: 'reqDefault',
+  },
+  'reqShow': {
+    default: '=',
+    tipo: registroFormularioTipo.input,
+    label: 'reqShow',
+  },
+  'reqHide': {
+    default: '=',
+    tipo: registroFormularioTipo.input,
+    label: 'reqHide',
+  },
+  'reqRef': {
+    default: '=',
+    tipo: registroFormularioTipo.input,
+    label: 'reqRef',
+  },
+  'optDefault': {
+    default: '!',
+    tipo: registroFormularioTipo.input,
+    label: 'optDefault',
+  },
+  'optShow': {
+    default: '!',
+    tipo: registroFormularioTipo.input,
+    label: 'optShow',
+  },
+  'optHide': {
+    default: '!',
+    tipo: registroFormularioTipo.input,
+    label: 'optHide',
+  },
+  'optRef': {
+    default: '!',
+    tipo: registroFormularioTipo.input,
+    label: 'optRef',
+  },
+};
 
 function buscadorClientes() {
   var configuracion = {
     'nombre': {
       default: '=',
-      tipo: '',
+      tipo: registroFormularioTipo.input,
       label: 'Asociaciones',
     },
     'valor': {
       default: '=?',
-      tipo: '',
+      tipo: registroFormularioTipo.input,
       label: 'Asociaciones',
     },
     'hue': {
       default: '=',
-      tipo: '',
+      tipo: registroFormularioTipo.input,
       label: 'Asociaciones',
     },
   };
-  return buscadorBase.apply(configuracion);
+  return buscador.apply(configuracion);
 }
 
 function run($log) {
@@ -207,7 +264,7 @@ angular.module('app', [
   .controller('MainCtrl', ['$scope', '$log', MainCtrl])
   .controller('MasterCtrl', ['$scope', '$log', MasterCtrl])
   .controller('GridCtrl', ['$scope', '$log', GridCtrl])
-  .directive('buscadorArticulos', buscadorArticulos)
-  .directive('buscadorClientes', buscadorClientes)
+  .directive('buscadorArticulos', buscadorFactory(configuracionArticulos))
+  .directive('simple', simple)
   .value('version', '1.1.0');
 // })();

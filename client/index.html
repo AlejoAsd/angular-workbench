@@ -16,25 +16,28 @@
 
 <body ng-controller="MasterCtrl as master">
   <div ng-controller="GridCtrl as grid">
-    <select ng-model="grid.selected">
-      <option value=1>1</option>
-      <option value=2>2</option>
-      <option value=3>3</option>
-    </select> <br>
+    <label>simple 1</label>
+    <simple></simple><br><br>
+    <!-- <label>simple 2</label>
+    <simple></simple><br><br>
+    <label>simple 3</label>
+    <simple></simple><br><br> -->
+    <label>grid.val</label>
     <input ng-model="grid.val"/><br><br>
     <buscador-articulos
-      req-show="="
-      req-hide="false"
-      req-ref="grid.val"
-      opt-show="="
-      opt-hide="false"
-      opt-ref="grid.val"
+      req-show="g"
+      req-hide="a"
+      req-ref="b"
+      opt-show="c"
+      opt-hide="d"
+      opt-ref="h"
     ></buscador-articulos>
-    <buscador-clientes
-      nombre="="
-      valor="dsa"
-      hue="qqqqq"
-    ></buscador-clientes>
+    <!-- <buscador-articulos
+      req-show="="
+      req-hide="="
+      req-ref="="
+      opt-ref="grid.val"
+    ></buscador-articulos> -->
   </div>
 
   <!-- build:js assets/js/vendor.js -->
