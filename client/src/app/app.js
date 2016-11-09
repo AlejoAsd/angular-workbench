@@ -73,6 +73,7 @@ function BuscadorCtrlFactory(datos) {
       }
       // Realizar el request
       // TODO
+      console.log(datos);
     };
 
     this.seleccionar = function (objeto) {
@@ -83,10 +84,7 @@ function BuscadorCtrlFactory(datos) {
 
 function buscadorBase() {
   // Definir los datos correspondientes al buscador
-  var datosGenerales = {
-    'seleccionado': '='
-  };
-  var datos = angular.extend(this || {}, datosGenerales);
+  var datos = this || {};
 
   // Definir el controlador
   var controlador = BuscadorCtrlFactory(datos);
@@ -99,7 +97,7 @@ function buscadorBase() {
     template: function (element, attrs) {
       var template = '';
       for (var parametro in datos) {
-        //  Definir la visibilidad del campo en base a su campo `default`:
+        //  Definir la visibilidad del campo en base a su configuración `default`:
         // * No se definió valor: mostrar (=) u ocultar (=?) el campo en base al tipo de binding
         // * valor es true: siempre mostrar el campo
         // * valor es false: nunca mostrar el campo
