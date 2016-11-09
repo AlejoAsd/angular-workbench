@@ -22,22 +22,19 @@
       <option value=3>3</option>
     </select> <br>
     <input ng-model="grid.val"/><br><br>
-    <buscador
-      req-show="true"
+    <buscador-articulos
+      req-show="="
       req-hide="false"
       req-ref="grid.val"
-      opt-show="true"
+      opt-show="="
       opt-hide="false"
       opt-ref="grid.val"
-    ></buscador>
-    <buscador
-      req-show="true"
-      req-hide="true"
-      req-ref="true"
-      opt-show="true"
-      opt-hide="true"
-      opt-ref="true"
-    ></buscador>
+    ></buscador-articulos>
+    <buscador-clientes
+      nombre="="
+      valor="dsa"
+      hue="qqqqq"
+    ></buscador-clientes>
   </div>
 
   <!-- build:js assets/js/vendor.js -->

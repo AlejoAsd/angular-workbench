@@ -56,68 +56,60 @@ function GridCtrl($scope, $log) {
   }
 }
 
-function BuscadorCtrlFactory(bindings) {
+function BuscadorCtrlFactory(datos) {
   return function BuscadorCtrl() {
     this.resultados = [];
-    this.bindings = bindings;
+    this.nombresDatos = Object.keys(datos);
 
     // Funciones
     this.buscar = function () {
       var datos = {}
-      for (var parametro in this.bindings) {
-        parametro = this.bindings[parametro];
+      for (var parametro in this.nombresDatos) {
+        parametro = this.nombresDatos[parametro];
         var valor = this[parametro];
         
         if (valor !== undefined)
           datos[parametro] = valor;
       }
+      // Realizar el request
+      // TODO
     };
 
     this.seleccionar = function (objeto) {
       this.seleccionado = objeto;
     };
-
-    /**
-     * Genera las cláusulas de búsqueda en base a los bindings definidos para
-     * el buscador.
-     */
-    this.generarClausulas = function () {}
   };
 }
 
-function buscadorConfigurable() {
-  // Definir los bindings correspondientes al buscador
-  var bindingsGenerales = {
+function buscadorBase() {
+  // Definir los datos correspondientes al buscador
+  var datosGenerales = {
     'seleccionado': '='
   };
-  var bindings = angular.extend(this.bindings || {}, bindingsGenerales);
+  var datos = angular.extend(this || {}, datosGenerales);
 
   // Definir el controlador
-  var controlador = BuscadorCtrlFactory(Object.keys(bindings));
+  var controlador = BuscadorCtrlFactory(datos);
 
   return {
-    scope: {},    
+    scope: {},
     controller: controlador,
     controllerAs: 'b',
     restrict: 'E',
     template: function (element, attrs) {
       var template = '';
-      for (var parametro in bindings) {
-        // No mostrar el objeto seleccionado
-        if (parametro === "seleccionado") continue;
-
-        //  Definir la visibilidad del campo:
+      for (var parametro in datos) {
+        //  Definir la visibilidad del campo en base a su campo `default`:
         // * No se definió valor: mostrar (=) u ocultar (=?) el campo en base al tipo de binding
         // * valor es true: siempre mostrar el campo
         // * valor es false: nunca mostrar el campo
         // * valor es una referencia: no mostrar el campo
         var valor = attrs[parametro] !== undefined
                     ? attrs[parametro]
-                    : bindings[attrs.$normalize(parametro)] === '=';
+                    : datos[attrs.$normalize(parametro)].default === '=';
         // Crear un input para el campo
-        if (valor === true || valor === "true") {
-          // Reemplazar el valor por el binding del controlador
-          // attrs.$set(parametro, parametro);
+        if (valor === true || valor === "=") {
+          // Reemplazar el valor por el binding del controlador en base al tipo de dato
           template += '<input name="' + parametro + '" ng-model="b.' + parametro + '"/>';
         }
       };
@@ -131,18 +123,69 @@ function buscadorConfigurable() {
 
 function buscadorArticulos() {
   var configuracion = {
-    bindings: {
-      'reqDefault': '=',
-      'reqShow': '=',
-      'reqHide': '=',
-      'reqRef': '=',
-      'optDefault': '=?',
-      'optShow': '=?',
-      'optHide': '=?',
-      'optRef': '=?',
-    }
+    'reqDefault': {
+      default: '=',
+      tipo: '',
+      label: 'Asociaciones',
+    },
+    'reqShow': {
+      default: '=',
+      tipo: '',
+      label: 'Asociaciones',
+    },
+    'reqHide': {
+      default: '=',
+      tipo: '',
+      label: 'Asociaciones',
+    },
+    'reqRef': {
+      default: '=',
+      tipo: '',
+      label: 'Asociaciones',
+    },
+    'optDefault': {
+      default: '=?',
+      tipo: '',
+      label: 'Asociaciones',
+    },
+    'optShow': {
+      default: '=?',
+      tipo: '',
+      label: 'Asociaciones',
+    },
+    'optHide': {
+      default: '=?',
+      tipo: '',
+      label: 'Asociaciones',
+    },
+    'optRef': {
+      default: '=?',
+      tipo: '',
+      label: 'Asociaciones',
+    },
   };
-  return buscadorConfigurable.apply(configuracion);
+  return buscadorBase.apply(configuracion);
+}
+
+function buscadorClientes() {
+  var configuracion = {
+    'nombre': {
+      default: '=',
+      tipo: '',
+      label: 'Asociaciones',
+    },
+    'valor': {
+      default: '=?',
+      tipo: '',
+      label: 'Asociaciones',
+    },
+    'hue': {
+      default: '=',
+      tipo: '',
+      label: 'Asociaciones',
+    },
+  };
+  return buscadorBase.apply(configuracion);
 }
 
 function run($log) {
@@ -166,6 +209,7 @@ angular.module('app', [
   .controller('MainCtrl', ['$scope', '$log', MainCtrl])
   .controller('MasterCtrl', ['$scope', '$log', MasterCtrl])
   .controller('GridCtrl', ['$scope', '$log', GridCtrl])
-  .directive('buscador', buscadorArticulos)
+  .directive('buscadorArticulos', buscadorArticulos)
+  .directive('buscadorClientes', buscadorClientes)
   .value('version', '1.1.0');
 // })();
