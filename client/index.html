@@ -17,21 +17,21 @@
 <body ng-controller="MasterCtrl as master">
   <div ng-controller="GridCtrl as grid">
     <label>simple 1</label>
-    <simple></simple><br><br>
+    <simple ref="grid.val" bool="true" num="5" str="'asd'" opt="undefined" ></simple><br><br>
     <!-- <label>simple 2</label>
     <simple></simple><br><br>
     <label>simple 3</label>
     <simple></simple><br><br> -->
     <label>grid.val</label>
     <input ng-model="grid.val"/><br><br>
-    <buscador-articulos
-      req-show="g"
-      req-hide="a"
-      req-ref="b"
-      opt-show="c"
-      opt-hide="d"
-      opt-ref="h"
-    ></buscador-articulos>
+    <!-- <buscador-articulos
+      req-show="grid.val"
+      req-hide="="
+      req-ref="="
+      opt-show="="
+      opt-hide="="
+      opt-ref="="
+    ></buscador-articulos> -->
     <!-- <buscador-articulos
       req-show="="
       req-hide="="

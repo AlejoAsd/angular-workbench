@@ -55,6 +55,9 @@ function MasterCtrl ($scope, $log) {
 
 function GridCtrl ($scope, $log) {
   $log.debug('GridCtrl loaded!');
+
+  this.val="val";
+
   this.func = function (value) {
     this.val = value
     value = value.toUpperCase();
@@ -91,44 +94,57 @@ function BuscadorCtrlFactory (datos) {
   };
 }
 
-function simple() {
-  var bindings = {a: '=?', b: '=?', c:'=?'};
+function simple($compile) {
+  var bindings = {ref: '=?', bool: '=?', num:'=?', str:'=?', opt:'=?'};
   var keys = Object.keys(bindings);
   return {
-    scope: bindings,
+    scope: {},
     controller: function(){},
-    template: function(element, attrs) {
-      var template = "";
-      for (var k in keys)
-      {
-        k = keys[k];
-        var v = attrs[k];
-        // if (v === undefined)
-        template += '<input ng-model="' + k + '"></input>';
-      }
-      return template;
-    },
+    // template: function(element, attrs) {
+    //   var template = "";
+    //   for (var k in keys)
+    //   {
+    //     k = keys[k];
+    //     var v = attrs[k];
+    //     // if (v === undefined)
+    //     template += '<input ng-model="' + k + '"></input>';
+    //   }
+    //   return template;
+    // },
     link: function(scope, element, attrs, ctrl) {
-      for (var k in keys) {
+      var k, a, s;
+      for (k in keys) {
         k = keys[k];
-        scope[k] = attrs[k];
+        a = attrs[k];
+        if (a.indexOf('.') > -1) {
+          // Bring in changes from outside: 
+          scope.$watch(k, function() {
+              scope.$eval(k + ' = ' + a);
+          });
+
+          // Send out changes from inside: 
+          scope.$watch(a, function(v) {
+              scope[k] = v;
+          });
+        }
       }
     },
   }
 }
+simple.$inject = ['$compile'];
 
 function buscadorFactory (configuracion) {
   var datos = configuracion || {};
+  var bindings = {};
+  for (var d in datos)
+  {
+    bindings[d] = '=?';
+  }
 
   // Definir el controlador
   var controlador = BuscadorCtrlFactory(datos);
 
   var buscador = function () {
-    var bindings = {};
-    for (var d in datos)
-    {
-      bindings[d] = '=?';
-    }
     return {
       scope: bindings,
       controller: controlador,
@@ -166,13 +182,17 @@ function buscadorFactory (configuracion) {
       },
       link: function (scope, element, attrs, ctrl) {
         for (var parametro in datos) {
-          var valor = attrs[parametro];
-          console.log(valor);
-          if (valor === "=")
-            scope[parametro] = "";
-          else if (valor === "!")
-            delete scope[parametro];
+          scope[parametro] = "";
+          attrs.$set(parametro, scope[parametro]);
         }
+        // for (var parametro in datos) {
+        //   var valor = attrs[parametro];
+        //   console.log(valor);
+        //   if (valor === "=")
+        //     scope[parametro] = "";
+        //   else if (valor === "!")
+        //     delete scope[parametro];
+        // }
       }
     }
   }
