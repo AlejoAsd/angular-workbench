@@ -10,6 +10,7 @@ angular.element(document).ready(function () {
 var registroFormularioTipo = {
     input: 'input',
     fecha: 'fecha',
+    checkbox: 'checkbox',
     tags: 'tags',
     dropdown: 'dropdown',
 }
@@ -71,7 +72,7 @@ function GridCtrl ($scope, $log) {
 function BuscadorCtrlFactory (datos) {
   return function BuscadorCtrl() {
     this.resultados = [];
-    this.nombresDatos = Object.keys(datos);
+    this.nombresDatos = Object.campos(datos);
 
     // Funciones
     this.buscar = function () {
@@ -94,44 +95,142 @@ function BuscadorCtrlFactory (datos) {
   };
 }
 
-function simple($compile) {
-  var bindings = {ref: '=?', bool: '=?', num:'=?', str:'=?', opt:'=?'};
-  var keys = Object.keys(bindings);
+/*
+ * Define los inputs y datos que están asociados a cada campo. Dependiendo 
+ * del dato definido para el campo, se tienen distintos comportamientos:
+ * undefined 
+ *   Este caso sucede cuando no se define el campo en la directiva. Se 
+ *   utiliza la entrada `default` de la configuración para determinar el 
+ *   comportamiento. El valor contenido en `default` es utilizado como 
+ *   el valor para el atributo indefinido. Por lo tanto, se pueden 
+ *   definir cualquiera de las siguientes configuraciones como la default
+ *   para determinar el comportamiento.
+ * '='
+ *   Se crea un input para cargar datos. El tipo de input es definido la
+ *   entrada `tipo` de la configuración del campo.
+ * '!' 
+ *   No se crea un input para cargar datos. No se asigna un valor al 
+ *   campo. 
+ * '*.*'
+ *   Si se provee una cadena que contiene un punto, se asume que se
+ *   trata de una referencia. No se crea un input para el campo, pero se
+ *   crea un binding de un sentido de la referencia al campo. Es decir, 
+ *   el campo siempre va a contener el mismo valor que la referencia, 
+ *   pero es incapaz de mutar la referencia. Es posible hacer una 
+ *   referencia a valores de campos del buscador por medio de un valor 
+ *   del tipo 'this.*', donde * es el nombre del campo del que se quiere 
+ *   la referencia.
+ * otros: 
+ *   Cualquier otro valor se toma como valor literal. No se crea un
+ *   input, y se asigna el valor literal al campo.
+ */
+function simple() {
+  var campos = {
+    'ref': {
+      tipo: registroFormularioTipo.input,
+      default: '=',
+      label: 'ref',
+    }, 
+    'bool': {
+      tipo: registroFormularioTipo.checkbox,
+      default: '=',
+      label: 'bool',
+    }, 
+    'num': {
+      tipo: registroFormularioTipo.input,
+      default: '=',
+      label: 'num',
+    }, 
+    'str': {
+      tipo: registroFormularioTipo.input,
+      default: '=',
+      label: 'str',
+    }, 
+    'opt': {
+      tipo: registroFormularioTipo.input,
+      default: '=',
+      label: 'opt',
+    }
+  };
+  var tipoCampo = {};
+  var refList = {};
   return {
-    scope: {},
+    scope: true,
     controller: function(){},
-    // template: function(element, attrs) {
-    //   var template = "";
-    //   for (var k in keys)
-    //   {
-    //     k = keys[k];
-    //     var v = attrs[k];
-    //     // if (v === undefined)
-    //     template += '<input ng-model="' + k + '"></input>';
-    //   }
-    //   return template;
-    // },
-    link: function(scope, element, attrs, ctrl) {
-      var k, a, s;
-      for (k in keys) {
-        k = keys[k];
-        a = attrs[k];
-        if (a.indexOf('.') > -1) {
-          // Bring in changes from outside: 
-          scope.$watch(k, function() {
-              scope.$eval(k + ' = ' + a);
-          });
+    template: function(element, attrs) {
+      var template = "";
+      var campo, tipo, valor, dato;
+      for (campo in campos)
+      {
+        valor = attrs[campo];
+        dato = campos[campo]
 
-          // Send out changes from inside: 
-          scope.$watch(a, function(v) {
-              scope[k] = v;
-          });
+        // Definir el tipo de atributo
+        //  Default
+        //  Asignar el valor default de la configuración antes de procesar
+        if (valor === undefined)
+          valor = dato.default;
+        //  Input
+        if (valor === "=")
+        {
+          tipo = "=";
         }
+        //  Referencia
+        else if (valor.indexOf('.') !== -1)
+        {
+          tipo = ".";
+          // Agregar a la lista de referencias
+          if (refList[valor] === undefined)
+            refList[valor] = [campo];
+          else
+            refList[valor].push(campo);
+        }
+        //  Sin input
+        else
+        {
+          tipo = "!";
+        }
+        tipoCampo[campo] = tipo;
+
+        // Crear el template
+        if (tipo === "=")
+        {
+          template += '<input ng-model="' + campo + '"></input>';
+          template += '<label>' + dato.label + '</label><br>';
+        }
+      }
+      return template;
+    },
+    link: function(scope, element, attrs, ctrl) {
+      var campo, tipo, valor;
+      for (campo in campos) {
+        valor = attrs[campo];
+        tipo = tipoCampo[campo];
+
+        // Atribuir el valor en base al tipo de atributo
+        //  Input
+        if (tipo === '=') {
+          scope[campo] = "";
+        }
+        // Otro valor
+        else if (tipo !== '!') {
+          // Obtener los cambios de la referencia
+          scope[campo] = valor;
+        }
+      }
+      // Crear un binding de un sentido de la referencia a los valores
+      for (campo in refList) {
+        scope.$watch(campo, function(v) {
+          for (var ref in refList[campo])
+          { 
+            ref = refList[campo][ref];
+            scope[ref] = v;
+          }
+        });
       }
     },
   }
 }
-simple.$inject = ['$compile'];
 
 function buscadorFactory (configuracion) {
   var datos = configuracion || {};
@@ -154,26 +253,7 @@ function buscadorFactory (configuracion) {
         for (var parametro in datos) {
           var dato = datos[parametro];
           template += '<input ng-model="' + parametro + '"></input>';
-          template += '<label for="' + parametro + '">' + dato.label + '</label><br>'
-          // //  Definir la visibilidad del campo en base a su configuración `default`:
-          // // * No se definió valor: mostrar (=) u ocultar (=?) el campo en base al tipo de binding
-          // // * valor es true: siempre mostrar el campo
-          // // * valor es false: nunca mostrar el campo
-          // // * valor es una referencia: no mostrar el campo
-          // var dato = datos[parametro];
-          // var valor = attrs[parametro] !== undefined
-          //             ? attrs[parametro]
-          //             : datos[attrs.$normalize(parametro)].default === '=';
-          // // Crear un input para el campo
-          // if (valor === true || valor === "=") {
-          //   // Reemplazar el valor por el binding del controlador en base al tipo de dato
-          //   template += '<label for="' + parametro + '">' + dato.label + '</label>' +
-          //   '<input id="' + parametro + '" ng-model="' + parametro + '"/>';
-          // }
-          // // else if (valor !== "!")
-          // // {
-          // //   scope[parametro] = valor;
-          // // }
+          
         };
         // Agregar el botón de búsqueda
         template += '<button ng-click="b.buscar()">Buscar</button><br>';
