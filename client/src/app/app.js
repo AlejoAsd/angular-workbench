@@ -145,18 +145,54 @@ function simple() {
       tipo: registroFormularioTipo.input,
       default: '=',
       label: 'str',
-    }, 
-    'opt': {
+    },
+    'req': {
       tipo: registroFormularioTipo.input,
       default: '=',
-      label: 'opt',
-    }
+      label: 'req',
+    },
+    'single': {
+      tipo: registroFormularioTipo.input,
+      default: '!',
+      label: 'single_mod',
+    },
+    'multiple': {
+      tipo: registroFormularioTipo.input,
+      default: '!',
+      label: 'multiple',
+      campos: ['multiple_1', 'multiple_2', 'multiple_3']
+    },
   };
   var tipoCampo = {};
   var refList = {};
   return {
     scope: true,
-    controller: function(){},
+    controller: function(){
+      this.buscar = function(valores) {
+        var datos, config, valor;
+        datos = {};
+        for (var campo in campos)
+        {
+          valor = valores[campo];
+          if (valor !== undefined)
+          {
+            // Incluir todos los campos de la configuración `campos` si existe
+            config = campos[campo].campos || campo;
+            // Asegurar que el objeto es un array
+            config = Object.prototype.toString.call(config) == "[object Array]" ? config : [config];
+          
+            // Agregar el valor para todos los campos correspondientes
+            for (campo in config)
+            {
+              campo = config[campo];
+              datos[campo] = valor;
+            }
+          }
+        }
+        console.log(datos);
+      }
+    },
+    controllerAs: 'ctrl',
     template: function(element, attrs) {
       var template = "";
       var campo, tipo, valor, dato;
@@ -199,6 +235,7 @@ function simple() {
           template += '<label>' + dato.label + '</label><br>';
         }
       }
+      template += '<button ng-click="ctrl.buscar(this)">Launch</button>'
       return template;
     },
     link: function(scope, element, attrs, ctrl) {
@@ -213,7 +250,7 @@ function simple() {
           scope[campo] = "";
         }
         // Otro valor
-        else if (tipo !== '!') {
+        else if (valor !== '!') {
           // Obtener los cambios de la referencia
           scope[campo] = valor;
         }

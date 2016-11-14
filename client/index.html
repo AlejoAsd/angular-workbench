@@ -16,7 +16,15 @@
 
 <body ng-controller="MasterCtrl as master">
   <div ng-controller="GridCtrl as grid">
-    <simple ref="grid.val" bool="=" num="5" str="'asd'" opt="grid.val" ></simple><br><br>
+    <simple 
+    ref="grid.val" 
+    bool="true" 
+    num="5" 
+    str="asd" 
+    req="="
+    opt="!"
+    single="single"
+    multiple="multiple" ></simple><br><br>
     <!-- <label>simple 2</label>
     <simple></simple><br><br>
     <label>simple 3</label>
