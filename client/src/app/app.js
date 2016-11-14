@@ -154,7 +154,7 @@ function simple() {
     'single': {
       tipo: registroFormularioTipo.input,
       default: '!',
-      label: 'single_mod',
+      label: 'single',
     },
     'multiple': {
       tipo: registroFormularioTipo.input,
@@ -201,6 +201,25 @@ function simple() {
         valor = attrs[campo];
         dato = campos[campo]
 
+        //  Asignar el valor default de la configuración antes de procesar
+        if (valor === undefined)
+          valor = dato.default;
+
+        // Crear el template
+        if (valor === "=")
+        {
+          template += '<input ng-model="' + campo + '"></input>';
+          template += '<label>' + dato.label + '</label><br>';
+        }
+      }
+      template += '<button ng-click="ctrl.buscar(this)">Launch</button>'
+      return template;
+    },
+    link: function(scope, element, attrs, ctrl) {
+      var campo, tipo, valor;
+      for (campo in campos) {
+        valor = attrs[campo];
+
         // Definir el tipo de atributo
         //  Default
         //  Asignar el valor default de la configuración antes de procesar
@@ -216,6 +235,7 @@ function simple() {
         {
           tipo = ".";
           // Agregar a la lista de referencias
+          // Se utiliza una lista para soportar múltiples watches a la misma ref
           if (refList[valor] === undefined)
             refList[valor] = [campo];
           else
@@ -226,28 +246,11 @@ function simple() {
         {
           tipo = "!";
         }
-        tipoCampo[campo] = tipo;
-
-        // Crear el template
-        if (tipo === "=")
-        {
-          template += '<input ng-model="' + campo + '"></input>';
-          template += '<label>' + dato.label + '</label><br>';
-        }
-      }
-      template += '<button ng-click="ctrl.buscar(this)">Launch</button>'
-      return template;
-    },
-    link: function(scope, element, attrs, ctrl) {
-      var campo, tipo, valor;
-      for (campo in campos) {
-        valor = attrs[campo];
-        tipo = tipoCampo[campo];
 
         // Atribuir el valor en base al tipo de atributo
         //  Input
         if (tipo === '=') {
-          scope[campo] = "";
+          scope[campo] = undefined;
         }
         // Otro valor
         else if (valor !== '!') {
