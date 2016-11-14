@@ -272,117 +272,6 @@ function simple() {
   }
 }
 
-function buscadorFactory (configuracion) {
-  var datos = configuracion || {};
-  var bindings = {};
-  for (var d in datos)
-  {
-    bindings[d] = '=?';
-  }
-
-  // Definir el controlador
-  var controlador = BuscadorCtrlFactory(datos);
-
-  var buscador = function () {
-    return {
-      scope: bindings,
-      controller: controlador,
-      restrict: 'E',
-      template: function (element, attrs) {
-        var template = '';
-        for (var parametro in datos) {
-          var dato = datos[parametro];
-          template += '<input ng-model="' + parametro + '"></input>';
-          
-        };
-        // Agregar el botón de búsqueda
-        template += '<button ng-click="b.buscar()">Buscar</button><br>';
-
-        return template;
-      },
-      link: function (scope, element, attrs, ctrl) {
-        for (var parametro in datos) {
-          scope[parametro] = "";
-          attrs.$set(parametro, scope[parametro]);
-        }
-        // for (var parametro in datos) {
-        //   var valor = attrs[parametro];
-        //   console.log(valor);
-        //   if (valor === "=")
-        //     scope[parametro] = "";
-        //   else if (valor === "!")
-        //     delete scope[parametro];
-        // }
-      }
-    }
-  }
-  return buscador;
-}
-
-var configuracionArticulos = {
-  'reqDefault': {
-    default: '=',
-    tipo: registroFormularioTipo.input,
-    label: 'reqDefault',
-  },
-  'reqShow': {
-    default: '=',
-    tipo: registroFormularioTipo.input,
-    label: 'reqShow',
-  },
-  'reqHide': {
-    default: '=',
-    tipo: registroFormularioTipo.input,
-    label: 'reqHide',
-  },
-  'reqRef': {
-    default: '=',
-    tipo: registroFormularioTipo.input,
-    label: 'reqRef',
-  },
-  'optDefault': {
-    default: '!',
-    tipo: registroFormularioTipo.input,
-    label: 'optDefault',
-  },
-  'optShow': {
-    default: '!',
-    tipo: registroFormularioTipo.input,
-    label: 'optShow',
-  },
-  'optHide': {
-    default: '!',
-    tipo: registroFormularioTipo.input,
-    label: 'optHide',
-  },
-  'optRef': {
-    default: '!',
-    tipo: registroFormularioTipo.input,
-    label: 'optRef',
-  },
-};
-
-function buscadorClientes() {
-  var configuracion = {
-    'nombre': {
-      default: '=',
-      tipo: registroFormularioTipo.input,
-      label: 'Asociaciones',
-    },
-    'valor': {
-      default: '=?',
-      tipo: registroFormularioTipo.input,
-      label: 'Asociaciones',
-    },
-    'hue': {
-      default: '=',
-      tipo: registroFormularioTipo.input,
-      label: 'Asociaciones',
-    },
-  };
-  return buscador.apply(configuracion);
-}
-
 function run($log) {
   $log.debug('App is running!');
 }
@@ -404,7 +293,6 @@ angular.module('app', [
   .controller('MainCtrl', ['$scope', '$log', MainCtrl])
   .controller('MasterCtrl', ['$scope', '$log', MasterCtrl])
   .controller('GridCtrl', ['$scope', '$log', GridCtrl])
-  .directive('buscadorArticulos', buscadorFactory(configuracionArticulos))
   .directive('simple', simple)
   .value('version', '1.1.0');
 // })();
